@@ -8,11 +8,11 @@ export interface ApiConfig {
   accessSecret: string;
 }
 
-export async function recognizeLatex(imageBase64: string, config: ApiConfig): Promise<string> {
+export async function recognizeLatex(imageData: string, config: ApiConfig): Promise<string> {
   const { baseUrl, apiKey, model, useProxy, accessSecret } = config;
 
-  // Clean base64 string if it contains metadata
-  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+  // imageData already contains the full data:image/<type>;base64, prefix.
+  // No need to clean or re-add a fixed type.
 
   const payload = {
     model: model,
@@ -27,7 +27,7 @@ export async function recognizeLatex(imageBase64: string, config: ApiConfig): Pr
           {
             type: "image_url",
             image_url: {
-              url: `data:image/jpeg;base64,${cleanBase64}`
+              url: imageData // Use the full imageData string directly
             }
           }
         ]
