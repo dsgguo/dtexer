@@ -1,6 +1,7 @@
 {
   "name": "dtexer",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "main": "dist-electron/main.js",
   "scripts": {
