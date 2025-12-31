@@ -63,9 +63,14 @@ app.post('/api/proxy/chat/completions', async (req, res) => {
   }
 });
 
-// Fallback for SPA routing
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// Fallback for SPA routing - this should be the last route handler
+app.use((req, res, next) => {
+  // If it's not an API call and it's a GET request, serve the React app
+  if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  } else {
+    next(); // Pass on to the next handler (which could be a 404)
+  }
 });
 
 app.listen(PORT, () => {
