@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-electron
+release
+.env
+.DS_Store
+.git
+.gitignore
+coverage
+test
+*.log

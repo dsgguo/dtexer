@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Settings, Image as ImageIcon, Copy, Check, Loader2, X, RefreshCw, Wifi, AlertCircle, ChevronRight, Keyboard } from 'lucide-react';
+import { Settings, Image as ImageIcon, Copy, Check, Loader2, X, RefreshCw, Wifi, AlertCircle, ChevronRight, Keyboard, Shield, Globe } from 'lucide-react';
 import { ApiConfig, recognizeLatex, verifyConnection } from './lib/api';
 import 'katex/dist/katex.min.css';
 import { LatexRenderer } from './components/LatexRenderer';
@@ -12,6 +12,8 @@ const DEFAULT_CONFIG: ApiConfig = {
   baseUrl: 'https://api.openai.com/v1',
   apiKey: '',
   model: 'gpt-4o',
+  useProxy: false,
+  accessSecret: '',
 };
 
 function App() {
@@ -200,42 +202,80 @@ function App() {
                 <button onClick={() => setShowSettings(false)}><X size={16}/></button>
              </div>
              
-             <div className="space-y-3">
-                <div>
-                   <label className="block text-sm text-neutral-500 mb-1">Base URL</label>
-                   <input 
-                      className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
-                      value={config.baseUrl}
-                      onChange={(e) => setConfig({...config, baseUrl: e.target.value})}
-                   />
+             <div className="space-y-4">
+                {/* Mode Toggle */}
+                <div className="flex p-1 bg-neutral-100 dark:bg-neutral-900 rounded-md">
+                   <button 
+                      onClick={() => setConfig({...config, useProxy: false})}
+                      className={cn(
+                         "flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-sm transition-all",
+                         !config.useProxy ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-neutral-100" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                      )}
+                   >
+                      <Globe size={14} /> Custom API
+                   </button>
+                   <button 
+                      onClick={() => setConfig({...config, useProxy: true})}
+                      className={cn(
+                         "flex-1 flex items-center justify-center gap-2 py-1.5 text-sm font-medium rounded-sm transition-all",
+                         config.useProxy ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-neutral-100" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                      )}
+                   >
+                      <Shield size={14} /> Hosted
+                   </button>
                 </div>
-                <div>
-                   <label className="block text-sm text-neutral-500 mb-1">API Key</label>
-                   <input 
-                      type="password"
-                      className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
-                      value={config.apiKey}
-                      onChange={(e) => setConfig({...config, apiKey: e.target.value})}
-                      placeholder="sk-..."
-                   />
-                </div>
-                <div>
-                   <label className="block text-sm text-neutral-500 mb-1">Model Name</label>
-                   <input 
-                      className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
-                      value={config.model}
-                      onChange={(e) => setConfig({...config, model: e.target.value})}
-                   />
-                </div>
+
+                {config.useProxy ? (
+                   <div>
+                      <label className="block text-sm text-neutral-500 mb-1">Access Key</label>
+                      <input 
+                         type="password"
+                         className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
+                         value={config.accessSecret || ''}
+                         onChange={(e) => setConfig({...config, accessSecret: e.target.value})}
+                         placeholder="Enter provided access key..."
+                      />
+                      <p className="text-xs text-neutral-400 mt-1">Use the built-in AI service with your access key.</p>
+                   </div>
+                ) : (
+                   <div className="space-y-3">
+                      <div>
+                         <label className="block text-sm text-neutral-500 mb-1">Base URL</label>
+                         <input 
+                            className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
+                            value={config.baseUrl}
+                            onChange={(e) => setConfig({...config, baseUrl: e.target.value})}
+                         />
+                      </div>
+                      <div>
+                         <label className="block text-sm text-neutral-500 mb-1">API Key</label>
+                         <input 
+                            type="password"
+                            className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
+                            value={config.apiKey}
+                            onChange={(e) => setConfig({...config, apiKey: e.target.value})}
+                            placeholder="sk-..."
+                         />
+                      </div>
+                      <div>
+                         <label className="block text-sm text-neutral-500 mb-1">Model Name</label>
+                         <input 
+                            className="w-full p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm"
+                            value={config.model}
+                            onChange={(e) => setConfig({...config, model: e.target.value})}
+                         />
+                      </div>
+                   </div>
+                )}
                 
-                <div className="pt-2 flex items-center gap-2">
+                <div className="pt-2 flex items-center gap-2 border-t border-neutral-100 dark:border-neutral-800">
                    <button 
                       onClick={handleVerify}
                       disabled={verifying}
                       className="flex items-center gap-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                    >
                       {verifying ? <Loader2 className="animate-spin" size={14} /> : <Wifi size={14} />}
-                      Verify
+                      Verify Connection
                    </button>
                    {verifyStatus === 'success' && (
                       <span className="text-green-600 dark:text-green-400 text-sm flex items-center gap-1">

@@ -4,16 +4,16 @@ export interface ApiConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
+  useProxy: boolean;
+  accessSecret: string;
 }
 
 export async function recognizeLatex(imageBase64: string, config: ApiConfig): Promise<string> {
-  const { baseUrl, apiKey, model } = config;
+  const { baseUrl, apiKey, model, useProxy, accessSecret } = config;
 
   // Clean base64 string if it contains metadata
   const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-  // Construct the payload based on standard OpenAI Vision format
-  // This works for OpenAI, Gemini (via compat), and Ollama (if vision model supported)
   const payload = {
     model: model,
     messages: [
@@ -37,16 +37,23 @@ export async function recognizeLatex(imageBase64: string, config: ApiConfig): Pr
   };
 
   try {
-    const response = await axios.post(
-      `${baseUrl}/chat/completions`, // Appending /chat/completions to base URL
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        }
-      }
-    );
+    let url, headers;
+
+    if (useProxy) {
+      url = '/api/proxy/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'x-dtexer-access-key': accessSecret
+      };
+    } else {
+      url = `${baseUrl}/chat/completions`;
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+    }
+
+    const response = await axios.post(url, payload, { headers });
 
     const content = response.data.choices[0].message.content;
     
@@ -71,7 +78,7 @@ export async function recognizeLatex(imageBase64: string, config: ApiConfig): Pr
 }
 
 export async function verifyConnection(config: ApiConfig): Promise<void> {
-  const { baseUrl, apiKey, model } = config;
+  const { baseUrl, apiKey, model, useProxy, accessSecret } = config;
   
   const payload = {
     model: model,
@@ -85,16 +92,23 @@ export async function verifyConnection(config: ApiConfig): Promise<void> {
   };
 
   try {
-    await axios.post(
-      `${baseUrl}/chat/completions`,
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        }
-      }
-    );
+    let url, headers;
+
+    if (useProxy) {
+      url = '/api/proxy/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'x-dtexer-access-key': accessSecret
+      };
+    } else {
+      url = `${baseUrl}/chat/completions`;
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+    }
+
+    await axios.post(url, payload, { headers });
   } catch (error: any) {
     console.error("Verification Error:", error);
     if (error.response) {
